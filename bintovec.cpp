@@ -49,7 +49,7 @@ int main(int argc, const char *argv[])
         .help("The input file to turn into a C++ vector<>");
 
     program.add_argument("output_filename")
-        .help("The resulting file containing the C++ representation of the input file");
+        .help("The resulting files containing the C++ representation of the input file (example.hpp/example.cpp)");
 
     program.add_argument("-n", "--name")
         .help("Specifies the C++ variable name that is used in the output file")
@@ -92,10 +92,10 @@ int main(int argc, const char *argv[])
             auto output_filename = program.get<std::string>("output_filename");
 
             std::ofstream output_file;
-            output_file.open(output_filename, std::ios::out | std::ios::trunc);
+            output_file.open(output_filename + ".cpp", std::ios::out | std::ios::trunc);
             if (!output_file.is_open())
             {
-                std::cerr << "Unable to open output file: " << output_filename << std::endl;
+                std::cerr << "Unable to open output file: " << output_filename + ".cpp" << std::endl;
             }
             else 
             {
@@ -119,6 +119,7 @@ int main(int argc, const char *argv[])
                     {
                         output_started = true;
 
+                        output_file << "// Generated file - Do Not Modify" << std::endl;
                         output_file << "#include <vector>" << std::endl << std::endl;
 
                         if (ns.has_value())
@@ -160,6 +161,33 @@ int main(int argc, const char *argv[])
                     if (ns.has_value())
                     {
                         output_file << "}" << std::endl;
+                    }
+
+                    // Write the header
+                    std::ofstream header_file;
+                    header_file.open(output_filename + ".hpp", std::ios::out | std::ios::trunc);
+                    if (!header_file.is_open())
+                    {
+                        std::cerr << "Unable to open output file: " << output_filename + ".cpp" << std::endl;
+                    }
+                    else
+                    {
+                        header_file << "// Generated file - Do Not Modify" << std::endl;
+                        header_file << "#include <vector>" << std::endl << std::endl;;
+
+                        if (ns.has_value()) 
+                        {
+                            header_file << "namespace " << ns.value() << std::endl;
+                            header_file << "{" << std::endl;
+                        }
+
+                        header_file << (ns.has_value() ? "    " : "") << "extern const std::vector<unsigned char> " << variable_name << ";" << std::endl;
+
+                        if (ns.has_value()) 
+                        {
+                            header_file << "}" << std::endl;
+                        }
+
                     }
                 }
 
