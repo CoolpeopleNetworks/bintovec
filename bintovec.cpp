@@ -91,7 +91,7 @@ int main(int argc, const char *argv[])
                         output_started = true;
 
                         output_file << "#include <vector>" << std::endl << std::endl;
-                        output_file << "const std::vector<unsigned char> " << output_variable_name << std::endl;
+                        output_file << "const std::vector<unsigned char> " << output_variable_name << " =" << std::endl;
                         output_file << "{";  // Note: no std::endl by design.
                     }
 
