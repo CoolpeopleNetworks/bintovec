@@ -1,6 +1,7 @@
 #include <cctype>
 #include <cstdlib>
 #include <fstream>
+#include <iomanip>
 #include <ios>
 #include <iostream>
 #include <optional>
@@ -113,7 +114,7 @@ int main(int argc, const char *argv[])
                         break;
                     }
 
-                    read_buffer.resize(read_amount);
+                    read_buffer.resize(size_t(read_amount));
 
                     if (!output_started)
                     {
@@ -132,7 +133,7 @@ int main(int argc, const char *argv[])
                         output_file << (ns.has_value() ? "    " : "") << "{";  // Note: no std::endl by design.
                     }
 
-                    for (auto i = 0; i < read_buffer.size(); ++i)
+                    for (size_t i = 0; i < read_buffer.size(); ++i)
                     {
                         // if at the end of a line, add a CR and tab (as well as a comma if this isn't the first character)
                         if (i % 8 == 0)
