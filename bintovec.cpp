@@ -3,13 +3,11 @@
 #include <fstream>
 #include <ios>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
-void usage(const std::string &app)
-{
-    std::cerr << "Usage:" << std::endl << "\t" << app << " <input file> <output file>" << std::endl;
-}
+#include <argparse.hpp>
 
 std::string create_variable_name_from(const std::string &from)
 {
@@ -45,28 +43,59 @@ int main(int argc, const char *argv[])
 {
     int exit_status = EXIT_FAILURE;
 
-    if (argc != 3)
+    argparse::ArgumentParser program(argv[0]);
+
+    program.add_argument("input_filename")
+        .help("The input file to turn into a C++ vector<>");
+
+    program.add_argument("output_filename")
+        .help("The resulting file containing the C++ representation of the input file");
+
+    program.add_argument("-n", "--name")
+        .help("Specifies the C++ variable name that is used in the output file")
+        .default_value(std::optional<std::string>())
+        .action([](const std::string& value) { return std::optional<std::string>(value); });
+
+    program.add_argument("-ns", "--namespace")
+        .help("Specifies the C++ namespace the resulting vector will be placed into")
+        .default_value(std::optional<std::string>())
+        .action([](const std::string& value) { return std::optional<std::string>(value); });
+
+    try 
     {
-        std::cerr << "Incorrect number of arguments." << std::endl;
-        usage(argv[0]);
-    }
-    else
-    {
+        program.parse_args(argc, argv);
+
+        auto input_filename = program.get<std::string>("input_filename");
+
+        std::string variable_name;
+        auto specified_variable_name = program.get<std::optional<std::string>>("-n");
+        if (specified_variable_name.has_value())
+        {
+            variable_name = create_variable_name_from(specified_variable_name.value());
+        }
+        else 
+        {
+            // If no variable name was specified, just use the filename
+            variable_name = create_variable_name_from(input_filename);
+        }
+
+        auto ns = program.get<std::optional<std::string>>("-ns");
+
         std::ifstream input_file;
-        input_file.open(argv[1], std::ios::in | std::ios::binary);
+        input_file.open(input_filename, std::ios::in | std::ios::binary);
         if (!input_file.is_open())
         {
-            std::cerr << "Unable to open input file: " << std::string(argv[1]) << std::endl;
+            std::cerr << "Unable to open input file: " << std::string(input_filename) << std::endl;
         }
         else
         {
-            const std::string output_variable_name = create_variable_name_from(argv[1]);
+            auto output_filename = program.get<std::string>("output_filename");
 
             std::ofstream output_file;
-            output_file.open(argv[2], std::ios::out | std::ios::trunc);
+            output_file.open(output_filename, std::ios::out | std::ios::trunc);
             if (!output_file.is_open())
             {
-                std::cerr << "Unable to open output file: " << std::string(argv[2]) << std::endl;
+                std::cerr << "Unable to open output file: " << output_filename << std::endl;
             }
             else 
             {
@@ -91,8 +120,15 @@ int main(int argc, const char *argv[])
                         output_started = true;
 
                         output_file << "#include <vector>" << std::endl << std::endl;
-                        output_file << "const std::vector<unsigned char> " << output_variable_name << " =" << std::endl;
-                        output_file << "{";  // Note: no std::endl by design.
+
+                        if (ns.has_value())
+                        {
+                            output_file << "namespace " << ns.value() << std::endl;
+                            output_file << "{" << std::endl;
+                        }
+
+                        output_file << (ns.has_value() ? "    " : "") << "const std::vector<unsigned char> " << variable_name << " =" << std::endl;
+                        output_file << (ns.has_value() ? "    " : "") << "{";  // Note: no std::endl by design.
                     }
 
                     for (auto i = 0; i < read_buffer.size(); ++i)
@@ -105,7 +141,7 @@ int main(int argc, const char *argv[])
                                 output_file << ",";
                             }
 
-                            output_file << std::endl << "    ";
+                            output_file << std::endl << (ns.has_value() ? "    " : "") << "    ";
                         }
                         else
                         {
@@ -119,12 +155,22 @@ int main(int argc, const char *argv[])
                 if (output_started)
                 {
                     output_file << std::endl;
-                    output_file << "};" << std::endl;
+                    output_file << (ns.has_value() ? "    " : "") << "};" << std::endl;
+
+                    if (ns.has_value())
+                    {
+                        output_file << "}" << std::endl;
+                    }
                 }
 
                 exit_status = EXIT_SUCCESS;
             }
         }
+    }
+    catch (const std::runtime_error& err) 
+    {
+        std::cerr << err.what() << std::endl;
+        std::cerr << program;
     }
 
     return exit_status;

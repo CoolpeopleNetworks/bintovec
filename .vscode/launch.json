@@ -10,7 +10,9 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/bintovec",
             "args": [
-                "${workspaceFolder}/build/bintovec",
+                "--name", "some_var",
+                "-ns", "some_namespace",
+                "${workspaceFolder}/README.md",
                 "/tmp/output.c"
             ],
             "stopAtEntry": false,
