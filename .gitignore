@@ -34,3 +34,4 @@ build/ALL_BUILD.vcxproj
 
 # VSCode/CMake
 build
+.cache
