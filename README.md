@@ -1,6 +1,6 @@
 # bintovec - a file to C++ code generator.
 
-bintovec is a tool that is used to turn any file (picture, audio, text, etc) into C++20 source code (specifically into a std::vector<unsigned char>)
+bintovec is a tool that is used to turn any file (picture, audio, text, etc) into C++20 source code (specifically into a std::vector<unsigned char>).
 
 ## Prerequisites:
 1) A compiler compatible with C++20 (tested on Apple Clang 12 and Microsoft Visual Studio 2019)
@@ -28,8 +28,8 @@ $ bintovec photo.jpg photo_source_code
 ```
 
 This results in two files:
-photo_source_code.hpp
-photo_source_code.cpp
+    photo_source_code.hpp
+    photo_source_code.cpp
 
 These two files contain a declaration and definition of a std::vector<unsigned char> that is initialized with the contents of the input file (in this case, photo.jpg):
 
