@@ -1,4 +1,6 @@
-project(bintovec)
+cmake_policy(SET CMP0048 NEW)
+
+project(bintovec VERSION 1.0.4)
 cmake_minimum_required(VERSION 3.18)
 
 include(FetchContent)
